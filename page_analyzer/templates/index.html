@@ -4,12 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Page Analyzer</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center mt-5">Welcome to Page Analyzer!</h1>
-        <p class="text-center">This is first page</p>
+        <h1 class="mt-5">Добавьте новый URL</h1>
+        {% for message in get_flashed_messages(category_filter=["success", "danger"]) %}
+            <div class="alert alert-{{ message[1] }}">{{ message }}</div>
+        {% endfor %}
+        <form method="POST" action="{{ url_for('index') }}">
+            <div class="form-group">
+                <label for="url">URL</label>
+                <input type="text" class="form-control" id="url" name="url" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Добавить</button>
+        </form>
+        <a href="{{ url_for('urls') }}" class="btn btn-primary mt-3">Посмотреть все адреса</a>
     </div>
 </body>
 </html>

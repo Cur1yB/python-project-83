@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детали URL</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Детали URL</h1>
+        <div class="card" data-test="url">
+            <div class="card-body">
+                <h5 class="card-title">URL: {{ url.name }}</h5>
+                <p class="card-text">Дата добавления: {{ url.created_at }}</p>
+            </div>
+        </div>
+        <a href="{{ url_for('urls') }}" class="btn btn-primary mt-3">Назад к списку</a>
+    </div>
+</body>
+</html>
