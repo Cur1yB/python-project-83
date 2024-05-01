@@ -2,9 +2,45 @@ from flask import Flask, request, render_template, redirect, url_for, flash
 from .db import get_db_connection
 import validators
 from datetime import datetime
+import requests
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key')
+
+
+@app.route('/urls/<int:id>/checks', methods=['POST'])
+def create_check(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT name FROM urls WHERE id = %s', (id,))
+    url = cur.fetchone()['name']
+    
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            title = soup.find('title').text if soup.find('title') else None
+            h1 = soup.find('h1').text if soup.find('h1') else None
+            description = soup.find('meta', attrs={'name': 'description'})
+            description = description['content'] if description else None
+            cur.execute(
+                'INSERT INTO url_checks (url_id, status_code, h1, title, description, created_at) VALUES (%s, %s, %s, %s, %s, %s)',
+                (id, response.status_code, h1, title, description, datetime.now())
+            )
+            conn.commit()
+            flash('Страница успешно проверена', 'success')
+        else:
+            flash('Ошибка при запросе страницы', 'danger')
+    except requests.RequestException as e:
+        flash(f'Ошибка при запросе: {e}', 'danger')
+
+    cur.close()
+    conn.close()
+    return redirect(url_for('url_details', id=id))
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -44,6 +80,9 @@ def url_details(id):
     cur = conn.cursor()
     cur.execute('SELECT * FROM urls WHERE id = %s', (id,))
     url_data = cur.fetchone()
+    cur.execute('SELECT * FROM url_checks WHERE url_id = %s ORDER BY created_at DESC', (id,))
+    checks = cur.fetchall()
     cur.close()
     conn.close()
-    return render_template('url_details.html', url=url_data)
+    return render_template('url_details.html', url=url_data, checks=checks)
+

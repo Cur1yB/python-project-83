@@ -5,17 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Детали URL</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container { margin-top: 40px; }
+        .table { margin-top: 20px; }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="mt-5">Детали URL</h1>
-        <div class="card" data-test="url">
-            <div class="card-body">
-                <h5 class="card-title">URL: {{ url.name }}</h5>
-                <p class="card-text">Дата добавления: {{ url.created_at }}</p>
-            </div>
+        <h1 class="mt-5">Сайт: {{ url.name }}</h1>
+        <div class="mb-3">
+            <strong>ID:</strong> {{ url.id }}<br>
+            <strong>Дата создания:</strong> {{ url.created_at }}
         </div>
-        <a href="{{ url_for('urls') }}" class="btn btn-primary mt-3">Назад к списку</a>
+        <div class="mb-3">
+            <form method="POST" action="{{ url_for('create_check', id=url.id) }}">
+                <button type="submit" class="btn btn-primary">Запустить проверку</button>
+            </form>
+        </div>
+        <h2>Проверки</h2>
+        <table class="table table-striped" data-test="checks">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Код ответа</th>
+                    <th>h1</th>
+                    <th>title</th>
+                    <th>description</th>
+                    <th>Дата создания</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for check in checks %}
+                <tr>
+                    <td>{{ check.id }}</td>
+                    <td>{{ check.status_code }}</td>
+                    <td>{{ check.h1 }}</td>
+                    <td>{{ check.title }}</td>
+                    <td>{{ check.description }}</td>
+                    <td>{{ check.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('urls') }}" class="btn btn-primary">Назад к списку</a>
     </div>
 </body>
 </html>
