@@ -40,11 +40,11 @@ def create_check(id):
                  datetime.now())
             )
             conn.commit()
-            flash('Страница успешно проверена', 'success')
+            flash('Страница успешно проверена', 'alert-success')
         else:
-            flash('Ошибка при запросе страницы', 'danger')
+            flash('Ошибка при запросе страницы', 'alert-danger')
     except requests.RequestException as e:
-        flash(f'Произошла ошибка при проверке', 'danger')
+        flash(f'Произошла ошибка при проверке', 'alert-danger')
 
     cur.close()
     conn.close()
@@ -62,23 +62,23 @@ def index():
                 cur.execute('SELECT id FROM urls WHERE name = %s', (url,))
                 existing_url = cur.fetchone()
                 if existing_url:
-                    flash('Страница уже существует', 'info')
+                    flash('Страница уже существует', 'alert-info')
                     return redirect(url_for('url_details', id=existing_url[0]))
                 else:
                     cur.execute('INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id',
                                 (url, datetime.now()))
                     url_id = cur.fetchone()[0]
                     conn.commit()
-                    flash('Страница успешно добавлена', 'success')
+                    flash('Страница успешно добавлена', 'alert-success')
                     return redirect(url_for('url_details', id=url_id))
             except Exception as e:
                 conn.rollback()
-                flash(f'Ошибка при добавлении URL: {e}', 'danger')
+                flash('Произошла ошибка при проверке', 'alert-danger')
             finally:
                 cur.close()
                 conn.close()
         else:
-            flash('Некорректный URL', 'danger')
+            flash('Некорректный URL', 'alert-danger')
 
     return render_template('index.html')
 
