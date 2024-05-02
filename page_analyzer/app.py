@@ -111,4 +111,4 @@ def url_details(id):
     checks = cur.fetchall()
     cur.close()
     conn.close()
-    return render_template('url_details.html', url=url_data, checks=checks)
+    return render_template('url.html', url=url_data, checks=checks)
