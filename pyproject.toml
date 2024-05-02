@@ -24,12 +24,15 @@ gunicorn = "^20.1.0"
 python-dotenv = "^0.20.0"
 requests = "^2.31.0"
 beautifulsoup4 = "^4.12.3"
+psycopg2 = "^2.9.3"
+validators = "^0.18.2"
+
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
 pytest-cov = "^4.1.0"
 flake8 = "^7.0.0"
-psycopg2 = "^2.9.3"
-validators = "^0.18.2"
+mypy = "^1.8.0"
+
 
 [build-system]
 requires = ["poetry-core"]
