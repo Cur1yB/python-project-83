@@ -6,17 +6,28 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
+from urllib.parse import urlparse, urlunparse
 
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key')
+
 
 def format_date(value, format='%Y-%m-%d'):
     if value is None:
         return ""
     return value.strftime(format)
 
+
 app.jinja_env.filters['date'] = format_date
+
+
+def normalize_url(input_url):
+    """ Нормализует URL до основного домена и схемы. """
+    url_parts = urlparse(input_url)
+    normalized_url = urlunparse((url_parts.scheme, url_parts.netloc, '', '', '', ''))
+    return normalized_url
+
 
 @app.route('/urls/<int:id>/checks', methods=['POST'])
 def create_check(id):
@@ -43,8 +54,8 @@ def create_check(id):
             flash('Страница успешно проверена', 'alert-success')
         else:
             flash('Ошибка при запросе страницы', 'alert-danger')
-    except requests.RequestException as e:
-        flash(f'Произошла ошибка при проверке', 'alert-danger')
+    except requests.RequestException:
+        flash('Произошла ошибка при проверке', 'alert-danger')
 
     cur.close()
     conn.close()
@@ -54,26 +65,28 @@ def create_check(id):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        url = request.form['url']
-        if validators.url(url):
+        raw_url = request.form['url']
+        if validators.url(raw_url):
+            normalized_url = normalize_url(raw_url)
+            print(normalized_url)
             conn = get_db_connection()
             cur = conn.cursor()
             try:
-                cur.execute('SELECT id FROM urls WHERE name = %s', (url,))
+                cur.execute('SELECT id FROM urls WHERE name = %s', (normalized_url,))
                 existing_url = cur.fetchone()
                 if existing_url:
                     flash('Страница уже существует', 'alert-info')
                     return redirect(url_for('url_details', id=existing_url[0]))
                 else:
                     cur.execute('INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id',
-                                (url, datetime.now()))
+                                (normalized_url, datetime.now()))
                     url_id = cur.fetchone()[0]
                     conn.commit()
                     flash('Страница успешно добавлена', 'alert-success')
                     return redirect(url_for('url_details', id=url_id))
             except Exception as e:
                 conn.rollback()
-                flash('Произошла ошибка при проверке', 'alert-danger')
+                flash(f'Произошла ошибка при добавлении URL: {e}', 'alert-danger')
             finally:
                 cur.close()
                 conn.close()
