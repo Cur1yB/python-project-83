@@ -62,38 +62,40 @@ def create_check(id):
     return redirect(url_for('url_details', id=id))
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
-    if request.method == 'POST':
-        raw_url = request.form['url']
-        if validators.url(raw_url):
-            normalized_url = normalize_url(raw_url)
-            print(normalized_url)
-            conn = get_db_connection()
-            cur = conn.cursor()
-            try:
-                cur.execute('SELECT id FROM urls WHERE name = %s', (normalized_url,))
-                existing_url = cur.fetchone()
-                if existing_url:
-                    flash('Страница уже существует', 'alert-info')
-                    return redirect(url_for('url_details', id=existing_url[0]))
-                else:
-                    cur.execute('INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id',
-                                (normalized_url, datetime.now()))
-                    url_id = cur.fetchone()[0]
-                    conn.commit()
-                    flash('Страница успешно добавлена', 'alert-success')
-                    return redirect(url_for('url_details', id=url_id))
-            except Exception as e:
-                conn.rollback()
-                flash(f'Произошла ошибка при добавлении URL: {e}', 'alert-danger')
-            finally:
-                cur.close()
-                conn.close()
-        else:
-            flash('Некорректный URL', 'alert-danger')
-
     return render_template('index.html')
+
+
+@app.route('/urls', methods=['POST'])
+def add_url():
+    raw_url = request.form['url']
+    if validators.url(raw_url):
+        normalized_url = normalize_url(raw_url)
+        conn = get_db_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute('SELECT id FROM urls WHERE name = %s', (normalized_url,))
+            existing_url = cur.fetchone()
+            if existing_url:
+                flash('Страница уже существует', 'alert-info')
+                return redirect(url_for('url_details', id=existing_url['id']))
+            else:
+                cur.execute('INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id',
+                            (normalized_url, datetime.now()))
+                url_id = cur.fetchone()['id']
+                conn.commit()
+                flash('Страница успешно добавлена', 'alert-success')
+                return redirect(url_for('url_details', id=url_id))
+        except Exception as e:
+            conn.rollback()
+            flash(f'Произошла ошибка при добавлении URL: {e}', 'alert-danger')
+        finally:
+            cur.close()
+            conn.close()
+    else:
+        flash('Некорректный URL', 'alert-danger')
+        return redirect(url_for('index'))
 
 
 @app.route('/urls')
