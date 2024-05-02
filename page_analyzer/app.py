@@ -32,11 +32,11 @@ def create_check(id):
                 (id, response.status_code, h1, title, description, datetime.now())
             )
             conn.commit()
-            flash('Страница успешно проверена', 'success')
+            flash('Страница успешно проверена', 'success_check')
         else:
-            flash('Ошибка при запросе страницы', 'danger')
+            flash('Ошибка при запросе страницы', 'danger_check')
     except requests.RequestException as e:
-        flash(f'Ошибка при запросе: {e}', 'danger')
+        flash(f'Ошибка при запросе: {e}', 'danger_check')
 
     cur.close()
     conn.close()
@@ -50,15 +50,21 @@ def index():
         if validators.url(url):
             conn = get_db_connection()
             cur = conn.cursor()
-            cur.execute('INSERT INTO urls (name, created_at) VALUES (%s, %s)',
-                        (url, datetime.now()))
-            conn.commit()
-            cur.close()
-            conn.close()
-            flash('URL добавлен успешно!', 'success')
-            return redirect(url_for('index'))
+            try:
+                cur.execute('INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id',
+                            (url, datetime.now()))
+                url_id = cur.fetchone()[0]
+                conn.commit()
+                flash('Страница успешно добавлена', 'success')
+                return redirect(url_for('url_details', id=url_id))
+            except Exception as e:
+                conn.rollback() 
+                flash(f'Ошибка при добавлении URL: {e}', 'danger')
+            finally:
+                cur.close()
+                conn.close()
         else:
-            flash('Неверный URL.', 'danger')
+            flash('Некорректный URL', 'danger')
 
     return render_template('index.html')
 

@@ -12,16 +12,34 @@
 </head>
 <body>
     <div class="container">
+        {% for message in get_flashed_messages(category_filter=["success"]) %}
+            <div class="alert alert-{{ message[1] }}">{{ message }}</div>
+        {% endfor %}
         <h1 class="mt-5">Сайт: {{ url.name }}</h1>
-        <div class="mb-3">
-            <strong>ID:</strong> {{ url.id }}<br>
-            <strong>Дата создания:</strong> {{ url.created_at }}
-        </div>
+        <table class="table table-bordered" data-test="url">
+            <tbody>
+                <tr>
+                    <th scope="row">ID:</th>
+                    <td>{{ url.id }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Имя:</th>
+                    <td>{{ url.name }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Дата создания:</th>
+                    <td>{{ url.created_at }}</td>
+                </tr>
+            </tbody>
+        </table>
         <div class="mb-3">
             <form method="POST" action="{{ url_for('create_check', id=url.id) }}">
                 <button type="submit" class="btn btn-primary">Запустить проверку</button>
             </form>
         </div>
+        {% for message in get_flashed_messages(category_filter=["success_check", "danger_check"]) %}
+            <div class="alert alert-{{ message[1] }}">{{ message }}</div>
+        {% endfor %}
         <h2>Проверки</h2>
         <table class="table table-striped" data-test="checks">
             <thead>
