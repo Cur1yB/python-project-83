@@ -22,7 +22,7 @@
     <h2>Проверки</h2>
     <div class="mb-3">
         <form method="POST" action="{{ url_for('create_check', id=url.id) }}">
-            <button type="submit" class="btn btn-primary">Запустить проверку</button>
+            <input type="submit" class="btn btn-primary" value="Запустить проверку">
         </form>
     </div>
     <table class="table table-striped" data-test="checks">
