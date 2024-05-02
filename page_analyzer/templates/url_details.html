@@ -15,7 +15,7 @@
             </tr>
             <tr>
                 <th scope="row">Дата создания:</th>
-                <td>{{ url.created_at }}</td>
+                <td>{{ url.created_at | date }}</td>
             </tr>
         </tbody>
     </table>
@@ -44,7 +44,7 @@
                 <td>{{ check.h1 | default('', true) }}</td>
                 <td>{{ check.title }}</td>
                 <td>{{ check.description | default('', true) }}</td>
-                <td>{{ check.created_at }}</td>
+                <td>{{ check.created_at | date }}</td>
             </tr>
             {% endfor %}
         </tbody>

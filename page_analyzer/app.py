@@ -11,6 +11,12 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key')
 
+def format_date(value, format='%Y-%m-%d'):
+    if value is None:
+        return ""
+    return value.strftime(format)
+
+app.jinja_env.filters['date'] = format_date
 
 @app.route('/urls/<int:id>/checks', methods=['POST'])
 def create_check(id):
