@@ -1,71 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Детали URL</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .container { margin-top: 40px; }
-        .table { margin-top: 20px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        {% for message in get_flashed_messages(category_filter=["success", "info"]) %}
-            <div class="alert alert-{{ message[1] }}">{{ message }}</div>
-        {% endfor %}
-        <h1 class="mt-5">Сайт: {{ url.name }}</h1>
-        <table class="table table-bordered" data-test="url">
-            <tbody>
-                <tr>
-                    <th scope="row">ID:</th>
-                    <td>{{ url.id }}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Имя:</th>
-                    <td>{{ url.name }}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Дата создания:</th>
-                    <td>{{ url.created_at }}</td>
-                </tr>
-            </tbody>
-        </table>
-        <div class="mb-3">
-            <form method="POST" action="{{ url_for('create_check', id=url.id) }}">
-                <button type="submit" class="btn btn-primary">Запустить проверку</button>
-            </form>
-        </div>
-        {% for message in get_flashed_messages(category_filter=["success_check", "danger_check"]) %}
-            <div class="alert alert-{{ message[1] }}">{{ message }}</div>
-        {% endfor %}
-        <h2>Проверки</h2>
-        <table class="table table-striped" data-test="checks">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Код ответа</th>
-                    <th>h1</th>
-                    <th>title</th>
-                    <th>description</th>
-                    <th>Дата создания</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for check in checks %}
-                <tr>
-                    <td>{{ check.id }}</td>
-                    <td>{{ check.status_code }}</td>
-                    <td>{{ check.h1 }}</td>
-                    <td>{{ check.title }}</td>
-                    <td>{{ check.description }}</td>
-                    <td>{{ check.created_at }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <a href="{{ url_for('urls') }}" class="btn btn-primary">Назад к списку</a>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mt-5">Сайт: {{ url.name }}</h1>
+    <table class="table table-bordered" data-test="url">
+        <tbody>
+            <tr>
+                <th scope="row">ID:</th>
+                <td>{{ url.id }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Имя:</th>
+                <td>{{ url.name }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Дата создания:</th>
+                <td>{{ url.created_at }}</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="mb-3">
+        <form method="POST" action="{{ url_for('create_check', id=url.id) }}">
+            <button type="submit" class="btn btn-primary">Запустить проверку</button>
+        </form>
     </div>
-</body>
-</html>
+    <h2>Проверки</h2>
+    <table class="table table-striped" data-test="checks">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Код ответа</th>
+                <th>h1</th>
+                <th>title</th>
+                <th>description</th>
+                <th>Дата создания</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for check in checks %}
+            <tr>
+                <td>{{ check.id }}</td>
+                <td>{{ check.status_code }}</td>
+                <td>{{ check.h1 }}</td>
+                <td>{{ check.title }}</td>
+                <td>{{ check.description }}</td>
+                <td>{{ check.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

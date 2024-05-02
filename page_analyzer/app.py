@@ -34,11 +34,11 @@ def create_check(id):
                  datetime.now())
             )
             conn.commit()
-            flash('Страница успешно проверена', 'success_check')
+            flash('Страница успешно проверена', 'success')
         else:
-            flash('Ошибка при запросе страницы', 'danger_check')
+            flash('Ошибка при запросе страницы', 'danger')
     except requests.RequestException as e:
-        flash(f'Ошибка при запросе: {e}', 'danger_check')
+        flash(f'Произошла ошибка при проверке', 'danger')
 
     cur.close()
     conn.close()
@@ -81,7 +81,13 @@ def index():
 def urls():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM urls ORDER BY created_at DESC')
+    cur.execute('''
+        SELECT u.id, u.name, MAX(c.created_at) AS last_checked, MAX(c.status_code) AS last_status_code
+        FROM urls u
+        LEFT JOIN url_checks c ON u.id = c.url_id
+        GROUP BY u.id
+        ORDER BY u.created_at DESC
+    ''')
     urls_data = cur.fetchall()
     cur.close()
     conn.close()
