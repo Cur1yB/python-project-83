@@ -18,7 +18,7 @@ def create_check(id):
     cur = conn.cursor()
     cur.execute('SELECT name FROM urls WHERE id = %s', (id,))
     url = cur.fetchone()['name']
-    
+
     try:
         response = requests.get(url)
         if response.status_code == 200:
@@ -28,8 +28,10 @@ def create_check(id):
             description = soup.find('meta', attrs={'name': 'description'})
             description = description['content'] if description else None
             cur.execute(
-                'INSERT INTO url_checks (url_id, status_code, h1, title, description, created_at) VALUES (%s, %s, %s, %s, %s, %s)',
-                (id, response.status_code, h1, title, description, datetime.now())
+                'INSERT INTO url_checks (url_id, status_code, h1, title, '
+                + 'description, created_at) VALUES (%s, %s, %s, %s, %s, %s)',
+                (id, response.status_code, h1, title, description,
+                 datetime.now())
             )
             conn.commit()
             flash('Страница успешно проверена', 'success_check')
@@ -51,14 +53,15 @@ def index():
             conn = get_db_connection()
             cur = conn.cursor()
             try:
-                cur.execute('INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id',
+                cur.execute('INSERT INTO urls (name, created_at) '
+                            + 'VALUES (%s, %s) RETURNING id',
                             (url, datetime.now()))
                 url_id = cur.fetchone()[0]
                 conn.commit()
                 flash('Страница успешно добавлена', 'success')
                 return redirect(url_for('url_details', id=url_id))
             except Exception as e:
-                conn.rollback() 
+                conn.rollback()
                 flash(f'Ошибка при добавлении URL: {e}', 'danger')
             finally:
                 cur.close()
@@ -86,9 +89,9 @@ def url_details(id):
     cur = conn.cursor()
     cur.execute('SELECT * FROM urls WHERE id = %s', (id,))
     url_data = cur.fetchone()
-    cur.execute('SELECT * FROM url_checks WHERE url_id = %s ORDER BY created_at DESC', (id,))
+    cur.execute('SELECT * FROM url_checks WHERE url_id = %s '
+                + 'ORDER BY created_at DESC', (id,))
     checks = cur.fetchall()
     cur.close()
     conn.close()
     return render_template('url_details.html', url=url_data, checks=checks)
-
