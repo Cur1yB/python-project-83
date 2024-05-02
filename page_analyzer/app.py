@@ -53,13 +53,18 @@ def index():
             conn = get_db_connection()
             cur = conn.cursor()
             try:
-                cur.execute('INSERT INTO urls (name, created_at) '
-                            + 'VALUES (%s, %s) RETURNING id',
-                            (url, datetime.now()))
-                url_id = cur.fetchone()[0]
-                conn.commit()
-                flash('Страница успешно добавлена', 'success')
-                return redirect(url_for('url_details', id=url_id))
+                cur.execute('SELECT id FROM urls WHERE name = %s', (url,))
+                existing_url = cur.fetchone()
+                if existing_url:
+                    flash('Страница уже существует', 'info')
+                    return redirect(url_for('url_details', id=existing_url[0]))
+                else:
+                    cur.execute('INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id',
+                                (url, datetime.now()))
+                    url_id = cur.fetchone()[0]
+                    conn.commit()
+                    flash('Страница успешно добавлена', 'success')
+                    return redirect(url_for('url_details', id=url_id))
             except Exception as e:
                 conn.rollback()
                 flash(f'Ошибка при добавлении URL: {e}', 'danger')
