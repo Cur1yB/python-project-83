@@ -53,7 +53,7 @@ def create_check(id):
             conn.commit()
             flash('Страница успешно проверена', 'alert-success')
         else:
-            flash('Ошибка при запросе страницы', 'alert-danger')
+            flash('Произошла ошибка при проверке', 'alert-danger')
     except requests.RequestException:
         flash('Произошла ошибка при проверке', 'alert-danger')
 
