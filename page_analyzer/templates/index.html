@@ -1,22 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card mt-5">
-                <div class="card-body">
-                    <h1 class="card-title text-center">Анализатор страниц</h1>
-                    <p class="text-center">Бесплатно проверяйте сайты на SEO-пригодность</p>
-                    <form method="POST" action="{{ url_for('index') }}">
-                        <div class="form-group">
-                            <input type="url" class="form-control" id="url" name="url" placeholder="https://www.example.com" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">Проверить</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<div class="row">
+    <div class="col-12 col-md-10 col-lg-8 mx-auto border rounded-3 bg-light p-5">
+      <h1 class="display-3">Анализатор страниц</h1>
+      <p class="lead">Бесплатно проверяйте сайты на SEO-пригодность</p>
+      <form action="/urls " method="post" class="d-flex justify-content-center">
+      <input type="text" name="url" placeholder="https://www.example.com"value=""  class="form-control form-control-lg" required>
+      <input type="submit" class="btn btn-primary  btn-lg ms-3 px-5 text-uppercase mx-3" value="Проверить">
+  </form>
 {% endblock %}
