@@ -70,7 +70,7 @@ def index():
 @app.route('/urls', methods=['POST'])
 def add_url():
     raw_url = request.form['url']
-    if validators.url(raw_url):
+    if validators.url(raw_url):  # Проверка на валидность URL
         normalized_url = normalize_url(raw_url)
         conn = get_db_connection()
         cur = conn.cursor()
@@ -95,7 +95,7 @@ def add_url():
             conn.close()
     else:
         flash('Некорректный URL', 'alert-danger')
-        return redirect(url_for('index'))
+        return render_template('index.html'), 422
 
 
 @app.route('/urls')
