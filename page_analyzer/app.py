@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for, flash
-from .db import (open_db_connection, close_db_connection, get_url_by_id, 
+from .db import (open_db_connection, close_db_connection, get_url_by_id,
                  fetch_and_parse_url, insert_url_check)
 import validators
 from datetime import datetime
@@ -29,7 +29,7 @@ def normalize_url(input_url):
 
 @app.route('/urls/<int:id>/checks', methods=['POST'])
 def create_check(id):
-    conn = open_db_connection()[0]
+    conn = open_db_connection()
     url = get_url_by_id(conn, id)
 
     if url:

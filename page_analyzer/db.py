@@ -29,10 +29,9 @@ def close_db_connection(conn, cur):
         cur.close()
     if conn is not None:
         conn.close()
-        
+
 
 def get_url_by_id(conn, id):
-    """ Получает URL по идентификатору. """
     cur = conn.cursor()
     cur.execute('SELECT name FROM urls WHERE id = %s', (id,))
     result = cur.fetchone()
@@ -41,7 +40,6 @@ def get_url_by_id(conn, id):
 
 
 def fetch_and_parse_url(url):
-    """ Запрашивает URL и анализирует его содержимое. """
     try:
         response = requests.get(url)
         if response.status_code == 200:
@@ -52,12 +50,13 @@ def fetch_and_parse_url(url):
                 'description': soup.find('meta', attrs={'name': 'description'})['content'] if soup.find('meta', attrs={'name': 'description'}) else None,
                 'status_code': response.status_code
             }
+        else:
+            return {'error': 'Произошла ошибка при проверке'}
     except requests.RequestException:
         return {'error': 'Произошла ошибка при проверке'}
 
 
 def insert_url_check(conn, url_id, data):
-    """ Вставляет результаты проверки URL в базу данных. """
     cur = conn.cursor()
     cur.execute(
         'INSERT INTO url_checks (url_id, status_code, h1, title, description, created_at) '
