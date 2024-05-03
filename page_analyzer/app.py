@@ -1,30 +1,17 @@
 from flask import Flask, request, render_template, redirect, url_for, flash
 from .db import (open_db_connection, close_db_connection, get_url_by_id,
                  fetch_and_parse_url, insert_url_check, check_url_exists,
-                 insert_new_url)
+                 insert_new_url, get_all_urls, get_url_details)
 import validators
 from dotenv import load_dotenv
 import os
-from urllib.parse import urlparse, urlunparse
+from .utils import format_date, normalize_url
+
 
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key')
-
-
-def format_date(value, format='%Y-%m-%d'):
-    if value is None:
-        return ""
-    return value.strftime(format)
-
-
 app.jinja_env.filters['date'] = format_date
-
-
-def normalize_url(input_url):
-    url_parts = urlparse(input_url)
-    normalized_url = urlunparse((url_parts.scheme, url_parts.netloc, '', '', '', ''))
-    return normalized_url
 
 
 @app.route('/urls/<int:id>/checks', methods=['POST'])
@@ -79,26 +66,11 @@ def add_url():
 
 @app.route('/urls')
 def urls():
-    conn, cur = open_db_connection()
-    cur.execute('''
-        SELECT u.id, u.name, MAX(c.created_at) AS last_checked, MAX(c.status_code) AS last_status_code
-        FROM urls u
-        LEFT JOIN url_checks c ON u.id = c.url_id
-        GROUP BY u.id
-        ORDER BY u.created_at DESC
-    ''')
-    urls_data = cur.fetchall()
-    close_db_connection(conn, cur)
+    urls_data = get_all_urls()
     return render_template('urls.html', urls=urls_data)
 
 
 @app.route('/urls/<int:id>')
 def url_details(id):
-    conn, cur = open_db_connection()
-    cur.execute('SELECT * FROM urls WHERE id = %s', (id,))
-    url_data = cur.fetchone()
-    cur.execute('SELECT * FROM url_checks WHERE url_id = %s '
-                + 'ORDER BY created_at DESC', (id,))
-    checks = cur.fetchall()
-    close_db_connection(conn, cur)
+    url_data, checks = get_url_details(id)
     return render_template('url.html', url=url_data, checks=checks)

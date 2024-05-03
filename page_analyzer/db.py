@@ -75,3 +75,29 @@ def check_url_exists(cur, url):
 def insert_new_url(cur, url):
     cur.execute('INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id', (url, datetime.now()))
     return cur.fetchone()['id']
+
+
+def get_all_urls():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('''
+        SELECT u.id, u.name, MAX(c.created_at) AS last_checked, MAX(c.status_code) AS last_status_code
+        FROM urls u
+        LEFT JOIN url_checks c ON u.id = c.url_id
+        GROUP BY u.id
+        ORDER BY u.created_at DESC
+    ''')
+    urls_data = cur.fetchall()
+    conn.close()
+    return urls_data
+
+
+def get_url_details(url_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM urls WHERE id = %s', (url_id,))
+    url_data = cur.fetchone()
+    cur.execute('SELECT * FROM url_checks WHERE url_id = %s ORDER BY created_at DESC', (url_id,))
+    checks = cur.fetchall()
+    conn.close()
+    return url_data, checks
