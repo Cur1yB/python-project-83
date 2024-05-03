@@ -1,8 +1,8 @@
 from flask import Flask, request, render_template, redirect, url_for, flash
 from .db import (open_db_connection, close_db_connection, get_url_by_id,
-                 fetch_and_parse_url, insert_url_check)
+                 fetch_and_parse_url, insert_url_check, check_url_exists,
+                 insert_new_url)
 import validators
-from datetime import datetime
 from dotenv import load_dotenv
 import os
 from urllib.parse import urlparse, urlunparse
@@ -58,15 +58,12 @@ def add_url():
         normalized_url = normalize_url(raw_url)
         conn, cur = open_db_connection()
         try:
-            cur.execute('SELECT id FROM urls WHERE name = %s', (normalized_url,))
-            existing_url = cur.fetchone()
+            existing_url = check_url_exists(cur, normalized_url)
             if existing_url:
                 flash('Страница уже существует', 'alert-info')
                 return redirect(url_for('url_details', id=existing_url['id']))
             else:
-                cur.execute('INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id',
-                            (normalized_url, datetime.now()))
-                url_id = cur.fetchone()['id']
+                url_id = insert_new_url(cur, normalized_url)
                 conn.commit()
                 flash('Страница успешно добавлена', 'alert-success')
                 return redirect(url_for('url_details', id=url_id))

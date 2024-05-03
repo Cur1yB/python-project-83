@@ -65,3 +65,13 @@ def insert_url_check(conn, url_id, data):
     )
     conn.commit()
     cur.close()
+
+
+def check_url_exists(cur, url):
+    cur.execute('SELECT id FROM urls WHERE name = %s', (url,))
+    return cur.fetchone()
+
+
+def insert_new_url(cur, url):
+    cur.execute('INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id', (url, datetime.now()))
+    return cur.fetchone()['id']
