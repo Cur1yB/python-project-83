@@ -29,7 +29,7 @@ def normalize_url(input_url):
 
 @app.route('/urls/<int:id>/checks', methods=['POST'])
 def create_check(id):
-    conn = open_db_connection()
+    conn = open_db_connection()[0]
     url = get_url_by_id(conn, id)
 
     if url:
