@@ -78,8 +78,7 @@ def insert_new_url(cur, url):
 
 
 def get_all_urls():
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn, cur = open_db_connection()
     cur.execute('''
         SELECT u.id, u.name, MAX(c.created_at) AS last_checked, MAX(c.status_code) AS last_status_code
         FROM urls u
@@ -93,11 +92,10 @@ def get_all_urls():
 
 
 def get_url_details(url_id):
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn, cur = open_db_connection()
     cur.execute('SELECT * FROM urls WHERE id = %s', (url_id,))
     url_data = cur.fetchone()
     cur.execute('SELECT * FROM url_checks WHERE url_id = %s ORDER BY created_at DESC', (url_id,))
     checks = cur.fetchall()
-    conn.close()
+    close_db_connection(conn, cur)
     return url_data, checks
