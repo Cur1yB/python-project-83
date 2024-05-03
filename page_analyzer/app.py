@@ -1,9 +1,8 @@
 from flask import Flask, request, render_template, redirect, url_for, flash
-from .db import get_db_connection
+from .db import (open_db_connection, close_db_connection, get_url_by_id, 
+                 fetch_and_parse_url, insert_url_check)
 import validators
 from datetime import datetime
-import requests
-from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
 from urllib.parse import urlparse, urlunparse
@@ -23,7 +22,6 @@ app.jinja_env.filters['date'] = format_date
 
 
 def normalize_url(input_url):
-    """ Нормализует URL до основного домена и схемы. """
     url_parts = urlparse(input_url)
     normalized_url = urlunparse((url_parts.scheme, url_parts.netloc, '', '', '', ''))
     return normalized_url
@@ -31,34 +29,20 @@ def normalize_url(input_url):
 
 @app.route('/urls/<int:id>/checks', methods=['POST'])
 def create_check(id):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT name FROM urls WHERE id = %s', (id,))
-    url = cur.fetchone()['name']
+    conn = open_db_connection()[0]
+    url = get_url_by_id(conn, id)
 
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            title = soup.find('title').text if soup.find('title') else None
-            h1 = soup.find('h1').text if soup.find('h1') else None
-            description = soup.find('meta', attrs={'name': 'description'})
-            description = description['content'] if description else None
-            cur.execute(
-                'INSERT INTO url_checks (url_id, status_code, h1, title, '
-                + 'description, created_at) VALUES (%s, %s, %s, %s, %s, %s)',
-                (id, response.status_code, h1, title, description,
-                 datetime.now())
-            )
-            conn.commit()
+    if url:
+        result = fetch_and_parse_url(url)
+        if 'error' not in result:
+            insert_url_check(conn, id, result)
             flash('Страница успешно проверена', 'alert-success')
         else:
-            flash('Произошла ошибка при проверке', 'alert-danger')
-    except requests.RequestException:
-        flash('Произошла ошибка при проверке', 'alert-danger')
+            flash(result['error'], 'alert-danger')
+    else:
+        flash('URL не найден', 'alert-danger')
 
-    cur.close()
-    conn.close()
+    close_db_connection(conn, None)
     return redirect(url_for('url_details', id=id))
 
 
@@ -70,10 +54,9 @@ def index():
 @app.route('/urls', methods=['POST'])
 def add_url():
     raw_url = request.form['url']
-    if validators.url(raw_url):  # Проверка на валидность URL
+    if validators.url(raw_url):
         normalized_url = normalize_url(raw_url)
-        conn = get_db_connection()
-        cur = conn.cursor()
+        conn, cur = open_db_connection()
         try:
             cur.execute('SELECT id FROM urls WHERE name = %s', (normalized_url,))
             existing_url = cur.fetchone()
@@ -91,8 +74,7 @@ def add_url():
             conn.rollback()
             flash(f'Произошла ошибка при добавлении URL: {e}', 'alert-danger')
         finally:
-            cur.close()
-            conn.close()
+            close_db_connection(conn, cur)
     else:
         flash('Некорректный URL', 'alert-danger')
         return render_template('index.html'), 422
@@ -100,8 +82,7 @@ def add_url():
 
 @app.route('/urls')
 def urls():
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn, cur = open_db_connection()
     cur.execute('''
         SELECT u.id, u.name, MAX(c.created_at) AS last_checked, MAX(c.status_code) AS last_status_code
         FROM urls u
@@ -110,20 +91,17 @@ def urls():
         ORDER BY u.created_at DESC
     ''')
     urls_data = cur.fetchall()
-    cur.close()
-    conn.close()
+    close_db_connection(conn, cur)
     return render_template('urls.html', urls=urls_data)
 
 
 @app.route('/urls/<int:id>')
 def url_details(id):
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn, cur = open_db_connection()
     cur.execute('SELECT * FROM urls WHERE id = %s', (id,))
     url_data = cur.fetchone()
     cur.execute('SELECT * FROM url_checks WHERE url_id = %s '
                 + 'ORDER BY created_at DESC', (id,))
     checks = cur.fetchall()
-    cur.close()
-    conn.close()
+    close_db_connection(conn, cur)
     return render_template('url.html', url=url_data, checks=checks)
