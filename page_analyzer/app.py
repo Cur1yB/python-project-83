@@ -41,27 +41,30 @@ def index():
 @app.route('/urls', methods=['POST'])
 def add_url():
     raw_url = request.form['url']
-    if validators.url(raw_url):
-        normalized_url = normalize_url(raw_url)
-        conn, cur = open_db_connection()
-        try:
-            existing_url = check_url_exists(cur, normalized_url)
-            if existing_url:
-                flash('Страница уже существует', 'alert-info')
-                return redirect(url_for('url_details', id=existing_url['id']))
-            else:
-                url_id = insert_new_url(cur, normalized_url)
-                conn.commit()
-                flash('Страница успешно добавлена', 'alert-success')
-                return redirect(url_for('url_details', id=url_id))
-        except Exception as e:
-            conn.rollback()
-            flash(f'Произошла ошибка при добавлении URL: {e}', 'alert-danger')
-        finally:
-            close_db_connection(conn, cur)
-    else:
+    if not validators.url(raw_url):
         flash('Некорректный URL', 'alert-danger')
         return render_template('index.html'), 422
+
+    normalized_url = normalize_url(raw_url)
+    conn, cur = open_db_connection()
+    try:
+        existing_url = check_url_exists(cur, normalized_url)
+        if existing_url:
+            flash('Страница уже существует', 'alert-info')
+            redirect_url = redirect(url_for('url_details', id=existing_url['id']))
+        else:
+            url_id = insert_new_url(cur, normalized_url)
+            conn.commit()
+            flash('Страница успешно добавлена', 'alert-success')
+            redirect_url = redirect(url_for('url_details', id=url_id))
+    except Exception as e:
+        conn.rollback()
+        flash(f'Произошла ошибка при добавлении URL: {e}', 'alert-danger')
+        redirect_url = render_template('index.html'), 422
+    finally:
+        close_db_connection(conn, cur)
+
+    return redirect_url
 
 
 @app.route('/urls')

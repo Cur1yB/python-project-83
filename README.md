@@ -43,6 +43,11 @@ Use the `Makefile` to simplify the installation and startup process:
 git clone https://github.com/Cur1yB/python-project-83.git
 cd python-project-83
 
+## Configuration
+Before running the application, you need to set up your environment variables. Duplicate the `.env.example` file and rename it to `.env`. Then, modify it with your actual data for the following variables:
+- `SECRET_KEY`: a secret key for your application.
+- `DATABASE_URL`: the connection string for your PostgreSQL database, formatted as `postgresql://username:password@localhost:5432/database_name`.
+
 # Install dependencies
 make install
 
